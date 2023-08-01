@@ -15,53 +15,49 @@
 
                 <div class="total-time">
                     <div class="total-time__film" v-if="whatWatch === 'Film'">
-                        <span>Total Film Times</span>
+                        <span class="time-title">Hours</span>
+                        <input class="time-input" type="number" v-model="filmHours" />
+                        <span class="time-title">Minutes</span>
+                        <input class="time-input" type="number" v-model="filmMinutes" />
+                        <p>{{ filmTime }}</p>
                     </div>
                     <div class="total-time__serial" v-if="whatWatch === 'Serial'">
-                        <span>Total Serial Times</span>
+                        <span class="time-title">How many seasons?</span>
+                        <input class="time-input" type="number" v-model="serialSeason" />
+                        <span class="time-title">How many series</span>
+                        <input class="time-input" type="number" v-model="serialSeries" />
+                        <span class="time-title">How long is one series? (minutes)</span>
+                        <input class="time-input" type="number" v-model="serialSeriesMinutes" />
+                        <p>{{ serialTime }}</p>
                     </div>
+                </div>
+
+                <div class="tag-list tag-list--add">
+                    <div class="ui-tag__wrapper" @click="tagMenuShow = !tagMenuShow">
+                        <div class="ui-tag">
+                            <span class="tag-title">Add New</span>
+                            <span class="button-close" :class="{ active: !tagMenuShow }"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tag-list tag-list--menu" v-if="tagMenuShow">
+                    <input class="tag-add--input" type="text" placeholder="New tag" v-model="tagTitle"
+                        @keyup.enter="newTag" />
+                    <div class="button button-default" @click="newTag">Send</div>
                 </div>
 
                 <div class="tag-list">
-                    <div class="ui-tag__wrapper">
-                        <div class="ui-tag"><span class="tag-title">Dogs</span><span class="button-close"></span></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section>
-            <div class="container">
-                <div class="task-list">
-                    <div class="task-item" v-for="item in items" :key="item.id" :class="{ completed: item.completed }">
-                        <div class="ui-card ui-card--shadow">
-
-                            <div class="task-item__info">
-                                <div class="task-item__main-info">
-                                    <span class="ui-label ui-label--primary">{{ item.whatWatch }}</span>
-                                    <span>Total Time: </span>
-                                </div>
-                                <span class="button-close"></span>
-                            </div>
-
-                            <div class="task-item__content">
-
-                                <div class="task-item__header">
-                                    <div class="ui-checkbox-wrapper">
-                                        <input class="ui-checkbox" type="checkbox" v-model="item.completed">
-                                    </div>
-                                    <span class="ui-title-3">{{ item.title }}</span>
-                                </div>
-
-                                <div class="task-item__body">
-                                    <p class="ui-text-regular">
-                                        {{ item.description }}
-                                    </p>
-                                </div>
-
-                            </div>
+                    <div class="ui-tag__wrapper" v-for="tag in tags" :key="tag.title">
+                        <div class="ui-tag" @click="addTagUsed(tag)" :class="{ used: tag.use }">
+                            <span class="tag-title">{{ tag.title }}</span>
+                            <span class="button-close"></span>
                         </div>
                     </div>
+                    <p>{{ tagsUsed }}</p>
+                </div>
+                <div class="button-list">
+                    <div class="button button--round button-primary" @click="addTask">Send</div>
                 </div>
             </div>
         </section>
@@ -72,47 +68,99 @@
 export default {
     data() {
         return {
+            //model
             taskTitle: '',
             taskDescription: '',
             whatWatch: 'Film',
             taskId: 3,
-            items: [
+            //time
+            filmHours: 1,
+            filmMinutes: 24,
+            serialSeason: 1,
+            serialSeries: 8,
+            serialSeriesMinutes: 48,
+            //tags
+            tagMenuShow: false,
+            tagsUsed: [],
+            tagTitle: '',
+            tags: [
                 {
-                    'id': 1,
-                    'title': 'Game of Thrones',
-                    'description': 'Best of all',
-                    'whatWatch': 'Serial',
-                    'completed': false,
-                    'editing': false
+                    title: 'Triller',
+                    use: false
                 },
                 {
-                    'id': 2,
-                    'title': 'Trigger',
-                    'description': 'Best film',
-                    'whatWatch': 'Film',
-                    'completed': false,
-                    'editing': false
+                    title: 'Comedy',
+                    use: false
                 },
+                {
+                    title: 'Adventure',
+                    use: false
+                }
             ]
         }
     },
     methods: {
+        newTag() {
+            if (this.tagTitle === '') {
+                return
+            }
+            this.tags.push({
+                title: this.tagTitle,
+                used: false
+            })
+            // const tag = {
+            //   title: this.tagTitle,
+            // }
+        },
         addTask() {
             if (this.taskTitle === '') {
                 return
             }
-            this.items.push({
+            let time
+            if (this.whatWatch === 'Film') {
+                time = this.filmTime
+            } else {
+                time = this.serialTime
+            }
+            const item = {
                 id: this.taskId,
                 title: this.taskTitle,
                 description: this.taskDescription,
                 whatWatch: this.whatWatch,
+                time,
+                tagsUsed: this.tagsUsed,
                 completed: false,
                 editing: false
 
-            })
+            }
+            console.log(item)
             this.taskId += 1
             this.taskTitle = ''
             this.taskDescription = ''
+            this.tagsUsed = []
+        },
+        getHoursAndMinutes(minutes) {
+            let hours = Math.trunc(minutes / 60)
+            let min = minutes % 60
+            return hours + ' Hours ' + min + ' Minutes'
+        },
+        addTagUsed(tag) {
+            tag.use = !tag.use
+            if (tag.use) {
+                this.tagsUsed.push(tag.title)
+            } else {
+                this.tagsUsed.splice(tag.title, 1)
+            }
+        }
+    },
+    computed: {
+        filmTime() {
+            let min = (this.filmHours * 60) + (this.filmMinutes * 1)
+            return this.getHoursAndMinutes(min)
+        },
+        serialTime() {
+            let min = this.serialSeason * this.serialSeries * this.serialSeriesMinutes
+            return this.getHoursAndMinutes(min)
         }
     }
 }
@@ -125,29 +173,42 @@ export default {
             margin-right 12px
         label 
             margin-right 20px
-    .task-item
-        margin-bottom: 20px
+    .total-time
+        margin-bottom 20px
+    .time-title
+        display block
+        margin-bottom 6px
+    .time-input
+        max-width: 80px
+        margin-right 10px
+    .tag-list
+        margin-bottom 20px
+    .ui-tag__wrapper
+        margin-right 18px
+        margin-bottom 10px
         &:last-child
-            margin-bottom: 0px 
-    .task-item__info
-        display: flex
+            margin-right 0
+    .ui-tag
+        cursor pointer
+        .button-close
+            &.active
+                transform: rotate(45deg)
+        &.used 
+            background-color: #444ce0
+            color: #fff
+            .button-close
+                &:before
+                &:after
+                    background-color: #fff
+    .tag-list--menu
+        display flex
         justify-content: space-between
         align-items: center
-        margin-bottom: 20px
-    .button-close{
-        width 20px
-        height @width
-    }
-    .ui-label
-        margin-right: 8px
-    .task-item__header
+    .tag-add--input
+        margin-bottom 0
+        margin-right 10px
+        height 42
+    .button-list
         display flex
-        align-items center
-        margin-bottom 18px
-        .ui-checkbox-wrapper
-            margin-right 8px
-            display flex
-            align-items: center
-        .ui-title-3
-            margin-bottom 0        
+        justify-content flex-end
 </style>
