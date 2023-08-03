@@ -59,6 +59,7 @@
                 <div class="button-list">
                     <div class="button button--round button-primary" @click="addTask">Send</div>
                 </div>
+                
             </div>
         </section>
     </div>
@@ -83,20 +84,7 @@ export default {
             tagMenuShow: false,
             tagsUsed: [],
             tagTitle: '',
-            tags: [
-                {
-                    title: 'Triller',
-                    use: false
-                },
-                {
-                    title: 'Comedy',
-                    use: false
-                },
-                {
-                    title: 'Adventure',
-                    use: false
-                }
-            ]
+           
         }
     },
     methods: {
@@ -104,13 +92,13 @@ export default {
             if (this.tagTitle === '') {
                 return
             }
-            this.tags.push({
-                title: this.tagTitle,
-                used: false
-            })
-            // const tag = {
-            //   title: this.tagTitle,
-            // }
+            const tag = {
+              title: this.tagTitle,
+              use: false
+            }
+            this.$store.dispatch('addTag', tag)
+            this.tagTitle = ''
+
         },
         addTask() {
             if (this.taskTitle === '') {
@@ -123,21 +111,24 @@ export default {
                 time = this.serialTime
             }
             const item = {
-                id: this.taskId,
                 title: this.taskTitle,
                 description: this.taskDescription,
                 whatWatch: this.whatWatch,
                 time,
-                tagsUsed: this.tagsUsed,
+                tags: this.tagsUsed,
                 completed: false,
                 editing: false
 
             }
+            this.$store.dispatch('addTask', item)
             console.log(item)
-            this.taskId += 1
             this.taskTitle = ''
             this.taskDescription = ''
             this.tagsUsed = []
+            this.tags.forEach(element => {
+                element.use = false
+            });
+
         },
         getHoursAndMinutes(minutes) {
             let hours = Math.trunc(minutes / 60)
@@ -147,7 +138,9 @@ export default {
         addTagUsed(tag) {
             tag.use = !tag.use
             if (tag.use) {
-                this.tagsUsed.push(tag.title)
+                this.tagsUsed.push({
+                    title:tag.title
+                })
             } else {
                 this.tagsUsed.splice(tag.title, 1)
             }
@@ -161,6 +154,9 @@ export default {
         serialTime() {
             let min = this.serialSeason * this.serialSeries * this.serialSeriesMinutes
             return this.getHoursAndMinutes(min)
+        },
+        tags(){
+           return this.$store.getters.tags
         }
     }
 }
